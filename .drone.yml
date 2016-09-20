@@ -1,0 +1,38 @@
+clone:
+  path: logglum
+build:
+  image: golang:1.7-alpine
+  pull: true
+  environment:
+    - GOPATH=/drone/src/
+  commands:
+    - go build 
+notify:
+  slack:
+    webhook_url: $$SLACK_WEBHOOK
+    channel: builds
+    username: drone
+  
+publish:
+  docker:
+    username: $$DOCKER_USER
+    password: $$DOCKER_PASSWORD
+    email: $$DOCKER_EMAIL
+    repo: comptelfwd/logglum
+    tag:
+      - $$BRANCH
+      - $$COMMIT
+    when:
+      repo: CCorporation/logglum
+      event: push
+  docker:
+    username: $$DOCKER_USER
+    password: $$DOCKER_PASSWORD
+    email: $$DOCKER_EMAIL
+    repo: comptel/logglum
+    tag:
+      - $$TAG
+    when:
+      repo: CCorporation/logglum
+      event: tag
+
