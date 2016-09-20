@@ -18,7 +18,7 @@ publish:
     username: $$DOCKER_USER
     password: $$DOCKER_PASSWORD
     email: $$DOCKER_EMAIL
-    repo: comptelfwd/logglum
+    repo: comptel/logglum
     tag:
       - $$BRANCH
       - $$COMMIT
@@ -29,7 +29,7 @@ publish:
     username: $$DOCKER_USER
     password: $$DOCKER_PASSWORD
     email: $$DOCKER_EMAIL
-    repo: comptelfwd/logglum
+    repo: comptel/logglum
     tag:
       - $$TAG
     when:
