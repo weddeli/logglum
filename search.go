@@ -87,7 +87,7 @@ func dailySummary(loggly logglyInfo, slackToken string, channel string) {
 	yesterday := now.Add(-24 * time.Hour)
 	groupedMsgs, _ := summarizeLogglyQuery(query, yesterday.String(), loggly)
 
-	params := getSlackMessage(groupedMsgs, query, yesterday.String(), "Daily Summary", channel)
+	params := getSlackMessage(groupedMsgs, query, yesterday.String(), now.String(), "Daily Summary", channel)
 	channelID, timestamp, err := slackObj.PostMessage(channel, "", params)
 	if err != nil {
 		log.Error("daily-summary-slack-error", "error", err)
@@ -110,7 +110,7 @@ func hourlyCheck(loggly logglyInfo, slackToken string, channel string) {
 	groupedMsgs, total := summarizeLogglyQuery(query, onehourago.String(), loggly)
 
 	if total > 50 {
-		params := getSlackMessage(groupedMsgs, query, onehourago.String(), "Hourly warning", channel)
+		params := getSlackMessage(groupedMsgs, query, onehourago.String(), now.String(), "Hourly warning", channel)
 		channelID, timestamp, err := slackObj.PostMessage(channel, "", params)
 		if err != nil {
 			log.Error("hourly-summary-slack-error", "error", err)
@@ -122,7 +122,7 @@ func hourlyCheck(loggly logglyInfo, slackToken string, channel string) {
 	}
 }
 
-func getSlackMessage(groups []envSummary, query string, since string, title string, channel string) slack.PostMessageParameters {
+func getSlackMessage(groups []envSummary, query string, since string, to string, title string, channel string) slack.PostMessageParameters {
 
 	params := slack.PostMessageParameters{Username: "logglum", AsUser: true}
 
@@ -137,7 +137,7 @@ func getSlackMessage(groups []envSummary, query string, since string, title stri
 		Fields:     fields,
 		MarkdownIn: []string{"fields"},
 		Title:      title,
-		TitleLink:  "https://comptel.loggly.com/search#terms=" + url.QueryEscape(query) + "&from=" + url.QueryEscape(since),
+		TitleLink:  "https://comptel.loggly.com/search#terms=" + url.QueryEscape(query) + "&from=" + url.QueryEscape(since) + "&to=" + url.QueryEscape(to),
 	}
 	params.Attachments = []slack.Attachment{attachment}
 	return params
