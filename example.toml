@@ -1,0 +1,21 @@
+
+[searches]
+
+  [searches.threshold]
+  Query = "json.lvl:\"warn\" or json.lvl:\"eror\""
+  Title = "Hourly Threshold"
+  SlackChannel = "C04545454"
+  FrequencyMinutes = 1   #Should be double of the window you want, remember Shannon theorem
+  WindowMinutes = 60
+  Threshold = 50
+
+  [searches.summary]
+  Query = "json.lvl:\"warn\" or json.lvl:\"eror\""
+  Title = "Daily Summary"
+  SlackChannel = "C04545454"
+  Daily = true
+  Time = "09:00"       # Format HH:MM
+  WindowMinutes = 1440 # 24h in minutes
+  Threshold = 0        # All warnings and errors daily to slack
+  
+  
