@@ -64,3 +64,12 @@ Also logglum aggregates the events by the `json.msg` parameter.  All our logs ar
 ```
 
 So we perform searches on `json.lvl` and then we aggragate on `json.msg` to get the summaries.
+
+If you want to change the field used for the aggregation, you can do so by adding the json fields tags to the struct:
+
+```go
+type logglyEntry struct {
+	Msg string  `json:"yourfield"`
+	Lvl string  `json:"yourfields"`
+}
+```
