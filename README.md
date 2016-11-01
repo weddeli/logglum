@@ -46,7 +46,7 @@ services:
         environment:
             LOGGLY_ACCOUNT: …     # your loggly account
             LOGGLY_USER: logglum  # loggly username
-            LOGGLY_PASS: …        # loggly password
+            LOGGLY_PASSWORD: …    # loggly password
             SLACK_TOKEN: …        # slack webhook token https://koffee.slack.com/apps/manage/custom-integrations > Incoming Webhooks
             CONFIG_FILE: /etc/logglum/searches.toml
         volumes:
