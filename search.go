@@ -84,6 +84,9 @@ func executeQuery(search searchConfig, appConfig config) {
 	windowStart := now.Add(time.Duration(search.WindowMinutes*-1) * time.Minute)
 	groupedMsgs, total := summarizeLogglyQuery(search.Query, windowStart.String(), appConfig.Loggly)
 	if total >= search.Threshold {
+		if total == 0 { // Just in case threshold is 0 we want a text to notify that it is empty
+			groupedMsgs = "No results"
+		}
 		params := getSlackMessage(groupedMsgs, search.Query, windowStart.String(), now.String(), search.Title, search.SlackChannel)
 		channelID, timestamp, err := slackObj.PostMessage(search.SlackChannel, "", params)
 		if err != nil {
