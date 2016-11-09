@@ -52,7 +52,7 @@ services:
         volumes:
             - /etc/logglum:/etc/logglum   # you can change the source of the config files
 ```
-Then you do a `docker-compose up -d` and it should be running.
+Then you do a `docker-compose up -d` and it should be running. In case you want to update the config file the docker volume is preserved between runs, so you need to delete the volume to get the new config.
 
 ## Other important things
 
