@@ -54,6 +54,12 @@ services:
 ```
 Then you do a `docker-compose up -d` and it should be running. In case you want to update the config file the docker volume is preserved between runs, so you need to delete the volume to get the new config.
 
+If you want to use `docker` directly it would be something like:
+
+```
+docker run -d -e LOGGLY_ACCOUNT="YourLogglyAccount" -e LOGGLY_USER="LogglyAccountUser" -e LOGGLY_PASSWORD="LogglyAccountPassword" -e SLACK_TOKEN="YourSlackToken" -e CONFIG_FILE="/etc/logglum/searches.toml" -v /etc/logglum:/etc/logglum --restart unless-stopped comptel/logglum:master
+```
+
 ## Other important things
 
 logglum takes a couple of asumptions that you will need in order to work. First is that the format of your logs needs to be in JSON. If you don't already do so, you should, it makes loggly searches more powerful.
