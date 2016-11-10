@@ -2,6 +2,8 @@
 
 Generate loggly search summaries and forward them to a slack channel with a nice format. Very useful to get daily summaries of what has happened.
 
+![Example Slack output](https://www.fwd.cloud/commit/img/logglum-example.png)
+
 ## Why not alerts?
 
 Alerts from loggly only have at most 10 entries in the callback. We wanted to have full summaries of what has happened in our production/staging environments with a fast glance. 
