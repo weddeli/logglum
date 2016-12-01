@@ -87,7 +87,7 @@ func executeQuery(search searchConfig, appConfig config) {
 		if total == 0 { // Just in case threshold is 0 we want a text to notify that it is empty
 			groupedMsgs = "No results"
 		}
-		params := getSlackMessage(groupedMsgs, search.Query, windowStart.String(), now.String(), search.Title, search.SlackChannel)
+		params := getSlackMessage(groupedMsgs, search.Query, windowStart.String(), now.String(), search.Title+" "+strconv.Itoa(total), search.SlackChannel)
 		channelID, timestamp, err := slackObj.PostMessage(search.SlackChannel, "", params)
 		if err != nil {
 			log.Error("query-exec-slack-error", "error", err)
