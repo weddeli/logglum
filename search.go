@@ -16,6 +16,9 @@ import (
 	search "github.com/segmentio/go-loggly-search"
 )
 
+// The max of the results per loggly search. TODO Move this to the config file or per search value
+const maxLogglyResults = 6000
+
 func env(name string) string {
 	val := os.Getenv(name)
 	if val == "" {
@@ -131,7 +134,7 @@ func summarizeLogglyQuery(query string, period string, loggly logglyConfig) (str
 	var summaryMap map[string]int
 	summaryMap = make(map[string]int)
 
-	res, err := c.Query(query).Size(5000).From(period).Fetch()
+	res, err := c.Query(query).Size(maxLogglyResults).From(period).Fetch()
 	if err != nil {
 		log.Error("loggly-query-error", "error", err)
 		return "", 0
