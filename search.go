@@ -17,7 +17,7 @@ import (
 )
 
 // The max of the results per loggly search. TODO Move this to the config file or per search value
-const maxLogglyResults = 6000
+const maxLogglyResults = 5000
 
 func env(name string) string {
 	val := os.Getenv(name)
