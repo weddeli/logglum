@@ -146,6 +146,10 @@ func summarizeLogglyQuery(query string, period string, loggly logglyConfig) (str
 		json.Unmarshal([]byte(entryRaw.(string)), &entry)
 		current := summaryMap[entry.Msg]
 		summaryMap[entry.Msg] = current + 1
+		if len(entry.Msg) == 0 && current == 1 {
+			//it is an entry with empty msg, print it in logs to fix the loggin issue
+			log.Debug("empty-message-log", "message", entry)
+		}
 
 	}
 	//Generate a nice table view
