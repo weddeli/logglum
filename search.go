@@ -92,7 +92,7 @@ func executeQuery(search searchConfig, appConfig config) {
 		if total == 0 { // Just in case threshold is 0 we want a text to notify that it is empty
 			groupedMsgs = "No results"
 		}
-		params := getSlackMessage(groupedMsgs, search.Query, windowStart.String(), now.String(), search.Title+" "+strconv.Itoa(total), search.SlackChannel)
+		params := getSlackMessage(groupedMsgs, search.Query, windowStart.String(), now.String(), search.Title+" "+strconv.Itoa(total), search.SlackChannel, appConfig.Loggly.account)
 		for _, item := range params {
 			channelID, timestamp, err := slackObj.PostMessage(search.SlackChannel, "", item)
 			if err != nil {
@@ -106,7 +106,7 @@ func executeQuery(search searchConfig, appConfig config) {
 	}
 }
 
-func getSlackMessage(message string, query string, since string, to string, title string, channel string) []slack.PostMessageParameters {
+func getSlackMessage(message string, query string, since string, to string, title string, channel string, looglyAccount string) []slack.PostMessageParameters {
 
 	round := func(a float64) int {
 		if a < 0 {
@@ -140,7 +140,7 @@ func getSlackMessage(message string, query string, since string, to string, titl
 			Fields:     fields,
 			MarkdownIn: []string{"fields"},
 			Title:      title,
-			TitleLink:  "https://comptel.loggly.com/search#terms=" + url.QueryEscape(query) + "&from=" + url.QueryEscape(since) + "&until=" + url.QueryEscape(to),
+			TitleLink:  "https://" + looglyAccount + ".loggly.com/search#terms=" + url.QueryEscape(query) + "&from=" + url.QueryEscape(since) + "&until=" + url.QueryEscape(to),
 		}
 		params.Attachments = []slack.Attachment{attachment}
 		result[i] = params
