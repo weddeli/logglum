@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"math"
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -91,33 +93,60 @@ func executeQuery(search searchConfig, appConfig config) {
 			groupedMsgs = "No results"
 		}
 		params := getSlackMessage(groupedMsgs, search.Query, windowStart.String(), now.String(), search.Title+" "+strconv.Itoa(total), search.SlackChannel)
-		channelID, timestamp, err := slackObj.PostMessage(search.SlackChannel, "", params)
-		if err != nil {
-			log.Error("query-exec-slack-error", "error", err)
-			return
+		for _, item := range params {
+			channelID, timestamp, err := slackObj.PostMessage(search.SlackChannel, "", item)
+			if err != nil {
+				log.Error("query-exec-slack-error", "error", err)
+				return
+			}
+			log.Debug("query-exec-notified", "channel", channelID, "timestamp", timestamp)
 		}
-		log.Debug("query-exec-notified", "channel", channelID, "timestamp", timestamp)
 	} else {
 		log.Debug("query-exec-below-thresold", "thresold", search.Threshold, "total", total)
 	}
 }
 
-func getSlackMessage(message string, query string, since string, to string, title string, channel string) slack.PostMessageParameters {
+func getSlackMessage(message string, query string, since string, to string, title string, channel string) []slack.PostMessageParameters {
 
-	params := slack.PostMessageParameters{Username: "logglum", AsUser: true}
-
-	fields := make([]slack.AttachmentField, 1)
-	fields[0].Value = "```" + message + "```"
-	fields[0].Short = false
-	attachment := slack.Attachment{
-		Color:      "#ff0000",
-		Fields:     fields,
-		MarkdownIn: []string{"fields"},
-		Title:      title,
-		TitleLink:  "https://comptel.loggly.com/search#terms=" + url.QueryEscape(query) + "&from=" + url.QueryEscape(since) + "&until=" + url.QueryEscape(to),
+	round := func(a float64) int {
+		if a < 0 {
+			return int(math.Ceil(a - 0.5))
+		}
+		return int(math.Floor(a + 0.5))
 	}
-	params.Attachments = []slack.Attachment{attachment}
-	return params
+	const maxLinesSlackMessage = 26.0 // you cannot post more than 26 lines in an attachment in slack
+
+	lines := strings.Split(message, "\n")
+	numberLines := len(lines)
+
+	messagesNeeded := round(float64(numberLines) / maxLinesSlackMessage)
+
+	result := make([]slack.PostMessageParameters, messagesNeeded)
+
+	for i := range result {
+		params := slack.PostMessageParameters{Username: "logglum", AsUser: true}
+
+		initRange := i * maxLinesSlackMessage
+		endRange := (i + 1) * maxLinesSlackMessage
+		if endRange > numberLines {
+			endRange = numberLines
+		}
+		messageLines := strings.Join(lines[initRange:endRange], "\n")
+		fields := make([]slack.AttachmentField, 1)
+		fields[0].Value = "```" + messageLines + "```"
+		fields[0].Short = false
+		attachment := slack.Attachment{
+			Color:      "#ff0000",
+			Fields:     fields,
+			MarkdownIn: []string{"fields"},
+			Title:      title,
+			TitleLink:  "https://comptel.loggly.com/search#terms=" + url.QueryEscape(query) + "&from=" + url.QueryEscape(since) + "&until=" + url.QueryEscape(to),
+		}
+		params.Attachments = []slack.Attachment{attachment}
+		result[i] = params
+	}
+
+	return result
 }
 
 // struct used to decode the json message from loggly (the body of the log entry)
