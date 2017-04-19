@@ -133,7 +133,7 @@ func getSlackMessage(message string, query string, since string, to string, titl
 		}
 		messageLines := strings.Join(lines[initRange:endRange], "\n")
 		fields := make([]slack.AttachmentField, 1)
-		fields[0].Value = "```" + messageLines + "```"
+		fields[0].Value = "```\n" + messageLines + "```"
 		fields[0].Short = false
 		attachment := slack.Attachment{
 			Color:      "#ff0000",
