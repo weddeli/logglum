@@ -120,6 +120,9 @@ func getSlackMessage(message string, query string, since string, to string, titl
 	numberLines := len(lines)
 
 	messagesNeeded := round(float64(numberLines) / maxLinesSlackMessage)
+	if messagesNeeded == 0 {
+		messagesNeeded = 1 //we need at least one :)
+	}
 
 	result := make([]slack.PostMessageParameters, messagesNeeded)
 
