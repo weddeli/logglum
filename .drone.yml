@@ -1,12 +1,13 @@
 workspace:
   path: src/logglum
   base: /go
+
 pipeline:
   build:
     image: golang:1.8-alpine
     pull: true
     commands:
-      - go build 
+      - go build
 
   docker-commit:
     image: plugins/docker
@@ -14,22 +15,25 @@ pipeline:
     tags:
       - ${DRONE_BRANCH}
       - ${DRONE_COMMIT}
+    secrets: [ docker_username, docker_password ]
     when:
       event: push
       repo: comptelfwd/logglum
-      
+
   docker-tag:
     image: plugins/docker
     repo: comptel/logglum
     tags:
       - ${DRONE_TAG}
+    secrets: [ docker_username, docker_password ]
     when:
       event: tag
       repo: comptelfwd/logglum
-      
+
   slack:
     image: plugins/slack
     channel: builds
     username: drone
+    secrets: [ slack_webhook ]
     when:
       status:  [ failure, success ]
