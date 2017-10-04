@@ -11,7 +11,7 @@ pipeline:
 
   docker-commit:
     image: plugins/docker
-    repo: comptel/logglum
+    repo: comptelfwd/logglum
     tags:
       - ${DRONE_BRANCH}
       - ${DRONE_COMMIT}
