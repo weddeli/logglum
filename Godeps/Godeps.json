@@ -1,6 +1,6 @@
 {
 	"ImportPath": "logglum",
-	"GoVersion": "go1.7",
+	"GoVersion": "go1.9",
 	"GodepVersion": "v74",
 	"Deps": [
 		{
