@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"math"
+	"math/rand"
 	"net/url"
 	"os"
 	"strconv"
@@ -66,9 +67,16 @@ func main() {
 		return
 	}
 
+	// start the random with something that at least changes with time.
+	// we don't care if it is fully random, so more than enough for our needs
+	rand.Seed(int64(time.Now().Nanosecond()))
+
 	for _, search := range searches.Searches {
+
 		if search.Daily {
-			gocron.Every(1).Day().At(search.Time).Do(executeQuery, search, configuration)
+			randomness := strconv.Itoa(int(rand.Int31n(8)))       // 8 mins in string
+			time := search.Time[:len(search.Time)-1] + randomness // we have the time in format 09:00 and we replace the last char with some random value
+			gocron.Every(1).Day().At(time).Do(executeQuery, search, configuration)
 		} else {
 			gocron.Every(search.FrequencyMinutes).Minutes().Do(executeQuery, search, configuration)
 		}
