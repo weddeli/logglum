@@ -38,6 +38,12 @@ func main() {
 	}
 	log.Info("logglum-init", "config", configFile)
 
+	jsonLogsRaw := os.Getenv("JSON_LOGS")
+	if len(jsonLogsRaw) > 0 {
+		stdoutHandler := log.BufferedHandler(200000, log.StreamHandler(os.Stdout, log.JsonFormat()))
+		log.Root().SetHandler(stdoutHandler)
+	}
+
 	logglyConf := logglyConfig{
 		account:  env("LOGGLY_ACCOUNT"),
 		user:     env("LOGGLY_USER"),
@@ -52,18 +58,18 @@ func main() {
 
 	_, err := toml.DecodeFile(configFile, &searches)
 	if err != nil {
-		log.Error("config-toml-decode", "error", err)
+		log.Error("config-toml-decode", "errorString", err)
 		return
 	}
 	err = searches.valid()
 	if err != nil {
-		log.Error("config-toml-validate", "error", err)
+		log.Error("config-toml-validate", "errorString", err)
 		return
 	}
 
 	err = configuration.valid()
 	if err != nil {
-		log.Error("invalid-config-env-vars", "error", err)
+		log.Error("invalid-config-env-vars", "errorString", err)
 		return
 	}
 
@@ -102,15 +108,15 @@ func executeQuery(search searchConfig, appConfig config) {
 		}
 		params := getSlackMessage(groupedMsgs, search.Query, windowStart.String(), now.String(), search.Title+" "+strconv.Itoa(total), search.SlackChannel, appConfig.Loggly.account)
 		for _, item := range params {
-			channelID, timestamp, err := slackObj.PostMessage(search.SlackChannel, "", item)
+			channelID, _, err := slackObj.PostMessage(search.SlackChannel, "", item)
 			if err != nil {
-				log.Error("query-exec-slack-error", "error", err)
+				log.Error("query-exec-slack-error", "errorString", err)
 				return
 			}
-			log.Debug("query-exec-notified", "channel", channelID, "timestamp", timestamp)
+			log.Debug("query-exec-notified", "channel", channelID)
 		}
 	} else {
-		log.Debug("query-exec-below-thresold", "thresold", search.Threshold, "total", total)
+		log.Debug("query-exec-below-threshold", "threshold", search.Threshold, "total", total)
 	}
 }
 
