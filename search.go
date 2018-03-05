@@ -101,7 +101,7 @@ func executeQuery(search searchConfig, appConfig config) {
 	log.Debug("query-exec-start", "title", search.Title, "time", now)
 
 	windowStart := now.Add(time.Duration(search.WindowMinutes*-1) * time.Minute)
-	groupedMsgs, total := summarizeLogglyQuery(search.Query, windowStart.String(), appConfig.Loggly)
+	groupedMsgs, total := summarizeLogglyQuery(search.Title, search.Query, windowStart.String(), appConfig.Loggly)
 	if total >= search.Threshold {
 		if total == 0 { // Just in case threshold is 0 we want a text to notify that it is empty
 			groupedMsgs = "No results"
@@ -173,7 +173,7 @@ type logglyEntry struct {
 }
 
 // make a query to loggly and get a summary back, in nicely formated table format, and the number of events
-func summarizeLogglyQuery(query string, period string, loggly logglyConfig) (string, int) {
+func summarizeLogglyQuery(title, query string, period string, loggly logglyConfig) (string, int) {
 
 	c := search.New(loggly.account, loggly.user, loggly.password)
 
@@ -182,7 +182,7 @@ func summarizeLogglyQuery(query string, period string, loggly logglyConfig) (str
 
 	res, err := c.Query(query).Size(maxLogglyResults).From(period).Fetch()
 	if err != nil {
-		log.Error("loggly-query-error", "error", err)
+		log.Error("loggly-query-error", "error", err, "name", title)
 		return "", 0
 	}
 
