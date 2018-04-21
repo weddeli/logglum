@@ -101,7 +101,7 @@ func executeQuery(search searchConfig, appConfig config) {
 	log.Debug("query-exec-start", "title", search.Title, "time", now)
 
 	windowStart := now.Add(time.Duration(search.WindowMinutes*-1) * time.Minute)
-	groupedMsgs, total := summarizeLogglyQuery(search.Title, search.Query, windowStart.String(), appConfig.Loggly)
+	groupedMsgs, total := summarizeLogglyQueryRetrier(search.Title, search.Query, windowStart.String(), appConfig.Loggly)
 	if total >= search.Threshold {
 		if total == 0 { // Just in case threshold is 0 we want a text to notify that it is empty
 			groupedMsgs = "No results"
@@ -172,8 +172,19 @@ type logglyEntry struct {
 	Lvl string
 }
 
-// make a query to loggly and get a summary back, in nicely formated table format, and the number of events
-func summarizeLogglyQuery(title, query string, period string, loggly logglyConfig) (string, int) {
+// summarizeLogglyQueryRetrier make a query to loggly and get a summary back, in nicely formated table format, and the number of events,
+// if the query fails it retries once, as loggly API is crappy and fails many times
+func summarizeLogglyQueryRetrier(title, query string, period string, loggly logglyConfig) (string, int) {
+
+	summary, size, err := summarizeLogglyQuery(title, query, period, loggly)
+	if err != nil {
+		summary, size, err = summarizeLogglyQuery(title, query, period, loggly)
+	}
+	return summary, size
+}
+
+// summarizeLogglyQuery make a query to loggly and get a summary back, in nicely formated table format, and the number of events
+func summarizeLogglyQuery(title, query string, period string, loggly logglyConfig) (string, int, error) {
 
 	c := search.New(loggly.account, loggly.user, loggly.password)
 
@@ -183,7 +194,7 @@ func summarizeLogglyQuery(title, query string, period string, loggly logglyConfi
 	res, err := c.Query(query).Size(maxLogglyResults).From(period).Fetch()
 	if err != nil {
 		log.Error("loggly-query-error", "error", err, "name", title)
-		return "", 0
+		return "", 0, err
 	}
 
 	for _, event := range res.Events {
@@ -211,6 +222,6 @@ func summarizeLogglyQuery(title, query string, period string, loggly logglyConfi
 	}
 
 	table.Render()
-	return outputBuffer.String(), total
+	return outputBuffer.String(), total, nil
 
 }
