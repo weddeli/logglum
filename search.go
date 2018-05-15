@@ -179,6 +179,9 @@ func summarizeLogglyQueryRetrier(title, query string, period string, loggly logg
 	summary, size, err := summarizeLogglyQuery(title, query, period, loggly)
 	if err != nil {
 		summary, size, err = summarizeLogglyQuery(title, query, period, loggly)
+		if err != nil {
+			log.Error("loggly-query-error", "error", err, "name", title)
+		}
 	}
 	return summary, size
 }
@@ -193,7 +196,6 @@ func summarizeLogglyQuery(title, query string, period string, loggly logglyConfi
 
 	res, err := c.Query(query).Size(maxLogglyResults).From(period).Fetch()
 	if err != nil {
-		log.Error("loggly-query-error", "error", err, "name", title)
 		return "", 0, err
 	}
 
