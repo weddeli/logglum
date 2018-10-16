@@ -1,4 +1,4 @@
-FROM comptel/docker-alpine-base:v35.1
+FROM comptel/docker-alpine-base:v38
 
 RUN mkdir -p /opt/fwd/ && adduser -S loggly 
 RUN apk add --no-cache ca-certificates
