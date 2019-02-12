@@ -4,10 +4,10 @@ workspace:
 
 pipeline:
   build:
-    image: golang:1.10.0-alpine
+    image: golang:1.11.5
     pull: true
     commands:
-      - go build
+      - env GO111MODULE=on go build
 
   docker-commit:
     image: plugins/docker
