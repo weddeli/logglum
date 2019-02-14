@@ -157,7 +157,7 @@ func getSlackMessage(message string, query string, since string, to string, titl
 			Fields:     fields,
 			MarkdownIn: []string{"fields"},
 			Title:      title,
-			TitleLink:  "https://" + looglyAccount + ".loggly.com/search#terms=" + url.QueryEscape(query) + "&from=" + url.QueryEscape(since) + "&until=" + url.QueryEscape(to),
+			TitleLink:  "https://" + looglyAccount + ".loggly.com/search#terms=" + url.PathEscape(query) + "&from=" + url.PathEscape(since) + "&until=" + url.PathEscape(to),
 		}
 		params.Attachments = []slack.Attachment{attachment}
 		result[i] = params
