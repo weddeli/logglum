@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/url"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -191,8 +192,9 @@ func summarizeLogglyQuery(title, query string, period string, loggly logglyConfi
 
 	c := search.New(loggly.account, loggly.user, loggly.password)
 
-	var summaryMap map[string]int
-	summaryMap = make(map[string]int)
+	summaryMap := make(map[string]int)
+
+	var keys []string //used to sort the map
 
 	res, err := c.Query(query).Size(maxLogglyResults).From(period).Fetch()
 	if err != nil {
@@ -203,7 +205,10 @@ func summarizeLogglyQuery(title, query string, period string, loggly logglyConfi
 		entryRaw := event.(map[string]interface{})["logmsg"]
 		entry := logglyEntry{}
 		json.Unmarshal([]byte(entryRaw.(string)), &entry)
-		current := summaryMap[entry.Msg]
+		current, found := summaryMap[entry.Msg]
+		if !found {
+			keys = append(keys, entry.Msg)
+		}
 		summaryMap[entry.Msg] = current + 1
 		if len(entry.Msg) == 0 && current == 1 {
 			//it is an entry with empty msg, print it in logs to fix the loggin issue
@@ -211,6 +216,8 @@ func summarizeLogglyQuery(title, query string, period string, loggly logglyConfi
 		}
 
 	}
+	sort.Strings(keys)
+
 	//Generate a nice table view
 	outputBuffer := new(bytes.Buffer)
 	table := tablewriter.NewWriter(outputBuffer)
@@ -218,9 +225,9 @@ func summarizeLogglyQuery(title, query string, period string, loggly logglyConfi
 	table.SetBorder(false)
 	total := 0
 
-	for k, count := range summaryMap {
-		table.Append([]string{k, strconv.Itoa(count)})
-		total = total + count
+	for _, key := range keys {
+		table.Append([]string{key, strconv.Itoa(summaryMap[key])})
+		total = total + summaryMap[key]
 	}
 
 	table.Render()
