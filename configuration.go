@@ -1,53 +1,52 @@
-package main
+package logglum
 
 import "errors"
 
-// Services and app config
-type config struct {
-	Loggly logglyConfig
-	Slack  slackConfig
+// Services and app Config
+type Config struct {
+	Loggly LogglyConfig
+	Slack  SlackConfig
 }
 
-func (c config) valid() error {
-	err := c.Loggly.valid()
+func (c Config) Valid() error {
+	err := c.Loggly.Valid()
 	if err != nil {
 		return err
 	}
-	err = c.Slack.valid()
+	err = c.Slack.Valid()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// loggly connection config
-type logglyConfig struct {
-	account  string
-	user     string
-	password string
+// loggly connection Config
+type LogglyConfig struct {
+	Account  string
+	Token     string
 }
 
-func (l logglyConfig) valid() error {
-	if len(l.account) == 0 || len(l.user) == 0 || len(l.password) == 0 {
+func (l LogglyConfig) Valid() error {
+	if len(l.Account) == 0 || len(l.Token) == 0  {
 		return errors.New("Loggly configuration incorrect")
 	}
 	return nil
 }
 
-// Slack config
-type slackConfig struct {
-	token string
+// Slack Config
+type SlackConfig struct {
+	Token string
 }
 
-func (s slackConfig) valid() error {
-	if len(s.token) == 0 {
+func (s SlackConfig) Valid() error {
+	if len(s.Token) == 0 {
 		return errors.New("Missing SLACK_TOKEN")
 	}
 	return nil
 }
 
 // Config struct to load toml search configs
-type tomlConfig struct {
+type TomlConfig struct {
 	Searches map[string]searchConfig
 }
 
@@ -63,7 +62,7 @@ type searchConfig struct {
 	Threshold        int //If more than these numbre of results in the search, it goes to slack
 }
 
-func (t tomlConfig) valid() error {
+func (t TomlConfig) Valid() error {
 
 	for _, entry := range t.Searches {
 		if entry.Daily {

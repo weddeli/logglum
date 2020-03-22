@@ -6,7 +6,7 @@ ENV CGO_ENABLED 0
 ENV GOOS linux
 
 COPY . .
-RUN go build -a -installsuffix cgo -o logglum . && ls
+RUN go build -a -installsuffix cgo -o logglum ./cmd
 
 
 FROM alpine:3.11

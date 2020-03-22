@@ -1,101 +1,27 @@
-package main
+package logglum
 
 import (
 	"bytes"
 	"encoding/json"
 	"math"
-	"math/rand"
 	"net/url"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/BurntSushi/toml"
 	log "github.com/inconshreveable/log15"
-	"github.com/jasonlvhit/gocron"
 	"github.com/nlopes/slack"
 	"github.com/olekukonko/tablewriter"
-	search "github.com/segmentio/go-loggly-search"
 )
 
-// The max of the results per loggly search. TODO Move this to the config file or per search value
+
+// The max of the results per loggly search. TODO Move this to the Config file or per search value
 const maxLogglyResults = 5000
 
-func env(name string) string {
-	val := os.Getenv(name)
-	if val == "" {
-		log.Error("missing-env-var", "var", name)
-	}
-	return val
-}
+func ExecuteQuery(search searchConfig, appConfig Config) {
 
-func main() {
-
-	configFile := os.Getenv("CONFIG_FILE")
-	if len(configFile) == 0 {
-		configFile = "searches.toml"
-	}
-	log.Info("logglum-init", "config", configFile)
-
-	jsonLogsRaw := os.Getenv("JSON_LOGS")
-	if len(jsonLogsRaw) > 0 {
-		stdoutHandler := log.BufferedHandler(200000, log.StreamHandler(os.Stdout, log.JsonFormat()))
-		log.Root().SetHandler(stdoutHandler)
-	}
-
-	logglyConf := logglyConfig{
-		account:  env("LOGGLY_ACCOUNT"),
-		user:     env("LOGGLY_USER"),
-		password: env("LOGGLY_PASSWORD"),
-	}
-
-	slackConf := slackConfig{token: env("SLACK_TOKEN")}
-
-	configuration := config{Loggly: logglyConf, Slack: slackConf}
-
-	var searches tomlConfig
-
-	_, err := toml.DecodeFile(configFile, &searches)
-	if err != nil {
-		log.Error("config-toml-decode", "errorString", err)
-		return
-	}
-	err = searches.valid()
-	if err != nil {
-		log.Error("config-toml-validate", "errorString", err)
-		return
-	}
-
-	err = configuration.valid()
-	if err != nil {
-		log.Error("invalid-config-env-vars", "errorString", err)
-		return
-	}
-
-	// start the random with something that at least changes with time.
-	// we don't care if it is fully random, so more than enough for our needs
-	rand.Seed(int64(time.Now().Nanosecond()))
-
-	for _, search := range searches.Searches {
-
-		if search.Daily {
-			randomness := strconv.Itoa(int(rand.Int31n(8)))       // 8 mins in string
-			time := search.Time[:len(search.Time)-1] + randomness // we have the time in format 09:00 and we replace the last char with some random value
-			gocron.Every(1).Day().At(time).Do(executeQuery, search, configuration)
-		} else {
-			gocron.Every(search.FrequencyMinutes).Minutes().Do(executeQuery, search, configuration)
-		}
-	}
-
-	<-gocron.Start()
-
-}
-
-func executeQuery(search searchConfig, appConfig config) {
-
-	slackObj := slack.New(appConfig.Slack.token)
+	slackObj := slack.New(appConfig.Slack.Token)
 
 	now := time.Now().UTC()
 
@@ -107,7 +33,7 @@ func executeQuery(search searchConfig, appConfig config) {
 		if total == 0 { // Just in case threshold is 0 we want a text to notify that it is empty
 			groupedMsgs = "No results"
 		}
-		params := getSlackMessage(groupedMsgs, search.Query, windowStart.String(), now.String(), search.Title+" "+strconv.Itoa(total), search.SlackChannel, appConfig.Loggly.account)
+		params := getSlackMessage(groupedMsgs, search.Query, windowStart.String(), now.String(), search.Title+" "+strconv.Itoa(total), search.SlackChannel, appConfig.Loggly.Account)
 		for _, item := range params {
 			channelID, _, err := slackObj.PostMessage(search.SlackChannel, "", item)
 			if err != nil {
@@ -173,9 +99,10 @@ type logglyEntry struct {
 	Lvl string
 }
 
+
 // summarizeLogglyQueryRetrier make a query to loggly and get a summary back, in nicely formated table format, and the number of events,
 // if the query fails it retries once, as loggly API is crappy and fails many times
-func summarizeLogglyQueryRetrier(title, query string, period string, loggly logglyConfig) (string, int) {
+func summarizeLogglyQueryRetrier(title, query string, period string, loggly LogglyConfig) (string, int) {
 
 	summary, size, err := summarizeLogglyQuery(title, query, period, loggly)
 	if err != nil {
@@ -188,9 +115,9 @@ func summarizeLogglyQueryRetrier(title, query string, period string, loggly logg
 }
 
 // summarizeLogglyQuery make a query to loggly and get a summary back, in nicely formated table format, and the number of events
-func summarizeLogglyQuery(title, query string, period string, loggly logglyConfig) (string, int, error) {
+func summarizeLogglyQuery(title, query string, period string, loggly LogglyConfig) (string, int, error) {
 
-	c := search.New(loggly.account, loggly.user, loggly.password)
+	c := NewClient(loggly.Account, loggly.Token)
 
 	summaryMap := make(map[string]int)
 
