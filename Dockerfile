@@ -1,13 +1,24 @@
-FROM comptel/docker-alpine-base:v38
+FROM golang:1.13.7 as build
 
-RUN mkdir -p /opt/fwd/ && adduser -S loggly 
+WORKDIR /app
+
+ENV CGO_ENABLED 0
+ENV GOOS linux
+
+COPY . .
+RUN go build -a -installsuffix cgo -o logglum . && ls
+
+
+FROM alpine:3.11
+
+RUN mkdir -p /opt/logglum/ && adduser -S logglum
 RUN apk add --no-cache ca-certificates
-WORKDIR /opt/fwd/
+WORKDIR /opt/logglum/
 
-ENV PATH /opt/fwd/:$PATH
+ENV PATH /opt/logglum/:$PATH
 
-USER loggly
+USER logglum
 
-COPY  logglum /opt/fwd/
+COPY  --from=build  /app/logglum /opt/logglum/
 
 CMD ["./logglum"]
