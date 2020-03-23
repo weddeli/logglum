@@ -35,12 +35,12 @@ func (l LogglyConfig) Valid() error {
 
 // Slack Config
 type SlackConfig struct {
-	Token string
+	WebhookURL string
 }
 
 func (s SlackConfig) Valid() error {
-	if len(s.Token) == 0 {
-		return errors.New("Missing SLACK_TOKEN")
+	if len(s.WebhookURL) == 0 {
+		return errors.New("Missing SLACK_WEBHOOK")
 	}
 	return nil
 }

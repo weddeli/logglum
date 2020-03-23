@@ -21,7 +21,6 @@ const maxLogglyResults = 5000
 
 func ExecuteQuery(search searchConfig, appConfig Config) {
 
-	slackObj := slack.New(appConfig.Slack.Token)
 
 	now := time.Now().UTC()
 
@@ -35,19 +34,19 @@ func ExecuteQuery(search searchConfig, appConfig Config) {
 		}
 		params := getSlackMessage(groupedMsgs, search.Query, windowStart.String(), now.String(), search.Title+" "+strconv.Itoa(total), search.SlackChannel, appConfig.Loggly.Account)
 		for _, item := range params {
-			channelID, _, err := slackObj.PostMessage(search.SlackChannel, "", item)
+			err := slack.PostWebhook(appConfig.Slack.WebhookURL,  item)
 			if err != nil {
 				log.Error("query-exec-slack-error", "errorString", err)
 				return
 			}
-			log.Debug("query-exec-notified", "channel", channelID)
+			log.Debug("query-exec-notified")
 		}
 	} else {
 		log.Debug("query-exec-below-threshold", "threshold", search.Threshold, "total", total)
 	}
 }
 
-func getSlackMessage(message string, query string, since string, to string, title string, channel string, looglyAccount string) []slack.PostMessageParameters {
+func getSlackMessage(message string, query string, since string, to string, title string, channel string, looglyAccount string) []*slack.WebhookMessage {
 
 	round := func(a float64) int {
 		if a < 0 {
@@ -65,10 +64,10 @@ func getSlackMessage(message string, query string, since string, to string, titl
 		messagesNeeded = 1 //we need at least one :)
 	}
 
-	result := make([]slack.PostMessageParameters, messagesNeeded)
+	result := make([]*slack.WebhookMessage, messagesNeeded)
 
 	for i := range result {
-		params := slack.PostMessageParameters{Username: "logglum", AsUser: true}
+		params := &slack.WebhookMessage{Username: "logglum"}
 
 		initRange := i * maxLinesSlackMessage
 		endRange := (i + 1) * maxLinesSlackMessage

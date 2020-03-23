@@ -39,7 +39,7 @@ func main() {
 		Token:     env("LOGGLY_TOKEN"),
 	}
 
-	slackConf := logglum.SlackConfig{Token: env("SLACK_TOKEN")}
+	slackConf := logglum.SlackConfig{WebhookURL: env("SLACK_WEBHOOK")}
 
 	configuration := logglum.Config{Loggly: logglyConf, Slack: slackConf}
 
@@ -69,9 +69,9 @@ func main() {
 	for _, search := range searches.Searches {
 
 		if search.Daily {
-			randomness := strconv.Itoa(int(rand.Int31n(8)))       // 8 mins in string
-			time := search.Time[:len(search.Time)-1] + randomness // we have the time in format 09:00 and we replace the last char with some random value
-			gocron.Every(1).Day().At(time).Do(logglum.ExecuteQuery, search, configuration)
+			randomness := strconv.Itoa(int(rand.Int31n(8)))    // 8 mins in string
+			t := search.Time[:len(search.Time)-1] + randomness // we have the t in format 09:00 and we replace the last char with some random value
+			gocron.Every(1).Day().At(t).Do(logglum.ExecuteQuery, search, configuration)
 		} else {
 			gocron.Every(search.FrequencyMinutes).Minutes().Do(logglum.ExecuteQuery, search, configuration)
 		}
